@@ -1,5 +1,5 @@
-# Use OpenLiberty base image
-FROM icr.io/appcafe/open-liberty:23.0.0.12-kernel-slim-java8-openj9-ubi
+# Use OpenLiberty base image with Java 11
+FROM icr.io/appcafe/open-liberty:23.0.0.12-kernel-slim-java11-openj9-ubi
 
 # Set user to root for installation
 USER root

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WebSphere Cafe is a Java EE 7 CRUD web application modernized for cloud-native deployment. Originally designed for WebSphere Application Server, it has been migrated to OpenLiberty and configured for Kubernetes deployment with PostgreSQL database.
+WebSphere Cafe is a Java EE 7 CRUD web application modernized for cloud-native deployment running on Java 11. Originally designed for WebSphere Application Server, it has been migrated to OpenLiberty and configured for Kubernetes deployment with PostgreSQL database.
 
 ## Common Development Commands
 
@@ -40,12 +40,12 @@ kubectl port-forward svc/websphere-cafe-service 8080:80 -n websphere-cafe  # Acc
 - **Parent POM**: Manages shared dependencies and build configuration
 
 ### Technology Stack
-- **Backend**: Java EE 7 (JAX-RS, EJB, JPA, CDI, Bean Validation)
+- **Backend**: Java EE 7 (JAX-RS, EJB, JPA, CDI, Bean Validation) on Java 11
 - **Frontend**: JSF 2.2 with XHTML/Facelets and Bootstrap
 - **Runtime**: OpenLiberty (migrated from WebSphere Traditional)
 - **Database**: PostgreSQL (cloud-native replacement)
 - **Build**: Maven 3.5.0+ with Liberty Maven Plugin
-- **Container**: Docker with OpenLiberty base image
+- **Container**: Docker with OpenLiberty Java 11 base image
 - **Orchestration**: Kubernetes with health checks and auto-scaling
 
 ### Key Components
