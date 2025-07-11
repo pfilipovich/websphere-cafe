@@ -41,7 +41,7 @@ public class HealthResource {
     @Readiness
     public HealthCheckResponse readinessCheck() {
         try {
-            cafeRepository.findAllCoffees();
+            cafeRepository.getAllCoffees();
             return HealthCheckResponse.up("Database connection");
         } catch (Exception e) {
             return HealthCheckResponse.down("Database connection failed: " + e.getMessage());
