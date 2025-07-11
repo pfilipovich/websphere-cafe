@@ -16,7 +16,23 @@
 
 	<description>This is the basic Java EE application used throughout the WebSphere on Azure demos.
         It is a simple CRUD application. It uses Maven and Java EE 7 (JAX-RS, EJB, CDI, JPA, JSF, Bean Validation).
+        Migrated to OpenLiberty for Kubernetes deployment.
     </description>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.microprofile</groupId>
+			<artifactId>microprofile</artifactId>
+			<version>6.0</version>
+			<type>pom</type>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<finalName>websphere-cafe</finalName>
@@ -32,6 +48,36 @@
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>io.openliberty.tools</groupId>
+				<artifactId>liberty-maven-plugin</artifactId>
+				<version>3.8.2</version>
+				<configuration>
+					<serverName>websphere-cafe</serverName>
+					<bootstrapProperties>
+						<default.http.port>9080</default.http.port>
+						<default.https.port>9443</default.https.port>
+					</bootstrapProperties>
+					<copyDependencies>
+						<location>${project.build.directory}/liberty/wlp/usr/shared/config/lib</location>
+						<dependency>
+							<groupId>org.postgresql</groupId>
+							<artifactId>postgresql</artifactId>
+						</dependency>
+					</copyDependencies>
+				</configuration>
+				<executions>
+					<execution>
+						<id>package-server</id>
+						<phase>package</phase>
+						<goals>
+							<goal>create</goal>
+							<goal>install-apps</goal>
+							<goal>package</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

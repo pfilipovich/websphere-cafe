@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: websphere-cafe-config
+  namespace: websphere-cafe
+data:
+  DB_SERVER: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "cafedb"

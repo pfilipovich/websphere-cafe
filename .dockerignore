@@ -1,0 +1,19 @@
+# Ignore unnecessary files for Docker build
+target/
+.git/
+.gitignore
+*.md
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+.mvn/
+mvnw
+mvnw.cmd
+.settings/
+.project
+.classpath
+*.iml
+.idea/
+*.log
+.DS_Store
