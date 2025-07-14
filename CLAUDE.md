@@ -17,6 +17,11 @@ mvn clean install         # Build and install to local Maven repository
 
 **Note**: The main build commands should be run from the project root directory. For Liberty-specific commands, navigate to the `websphere-cafe-web/` directory.
 
+### Prerequisites
+- Java 11 or higher installed
+- Maven 3.5.0 or higher installed
+- For WSL users: Install with `sudo apt install openjdk-11-jdk maven`
+
 ### Development
 ```bash
 mvn liberty:dev            # Start Liberty in development mode (from websphere-cafe-web/)
