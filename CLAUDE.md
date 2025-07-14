@@ -15,6 +15,8 @@ mvn clean install         # Build and install to local Maven repository
 ./scripts/build.sh         # Build application and Docker image
 ```
 
+**Note**: The main build commands should be run from the project root directory. For Liberty-specific commands, navigate to the `websphere-cafe-web/` directory.
+
 ### Development
 ```bash
 mvn liberty:dev            # Start Liberty in development mode (from websphere-cafe-web/)
