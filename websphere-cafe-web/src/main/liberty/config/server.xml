@@ -3,15 +3,15 @@
 
     <!-- Enable Liberty features -->
     <featureManager>
-        <feature>jaxrs-2.1</feature>
-        <feature>jpa-2.2</feature>
-        <feature>cdi-2.0</feature>
-        <feature>jsf-2.3</feature>
-        <feature>ejbLite-3.2</feature>
-        <feature>beanValidation-2.0</feature>
+        <feature>restfulWS-3.0</feature>
+        <feature>persistence-3.0</feature>
+        <feature>cdi-3.0</feature>
+        <feature>faces-3.0</feature>
+        <feature>enterpriseBeansLite-4.0</feature>
+        <feature>beanValidation-3.0</feature>
         <feature>jdbc-4.2</feature>
         <feature>jndi-1.0</feature>
-        <feature>servlet-4.0</feature>
+        <feature>servlet-5.0</feature>
         <feature>mpConfig-3.0</feature>
         <feature>mpHealth-4.0</feature>
         <feature>mpMetrics-4.0</feature>
