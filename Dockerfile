@@ -1,5 +1,5 @@
-# Use OpenLiberty base image with Java 11 - Updated to support Jakarta EE 9+ features
-FROM icr.io/appcafe/open-liberty:25.0.0.7-kernel-slim-java11-openj9-ubi
+# Use OpenLiberty base image with Java 11 and Web Profile
+FROM icr.io/appcafe/open-liberty:23.0.0.12-full-java11-openj9-ubi
 
 # Set user to root for installation
 USER root
