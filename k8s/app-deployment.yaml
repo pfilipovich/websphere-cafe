@@ -52,7 +52,7 @@ spec:
               key: DB_PASSWORD
         livenessProbe:
           httpGet:
-            path: /websphere-cafe/health
+            path: /websphere-cafe/rest/health
             port: 9080
           initialDelaySeconds: 60
           periodSeconds: 30
@@ -60,7 +60,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /websphere-cafe/health
+            path: /websphere-cafe/rest/health
             port: 9080
           initialDelaySeconds: 30
           periodSeconds: 10

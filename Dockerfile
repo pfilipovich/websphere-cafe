@@ -1,5 +1,5 @@
-# Use OpenLiberty base image with Java 11
-FROM icr.io/appcafe/open-liberty:23.0.0.12-kernel-slim-java11-openj9-ubi
+# Use OpenLiberty base image with Java 11 - Updated to support Jakarta EE 9+ features
+FROM icr.io/appcafe/open-liberty:25.0.0.7-kernel-slim-java11-openj9-ubi
 
 # Set user to root for installation
 USER root
@@ -29,7 +29,7 @@ EXPOSE 9080 9443
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:9080/websphere-cafe/health || exit 1
+  CMD curl -f http://localhost:9080/websphere-cafe/rest/health || exit 1
 
 # Start the server
 CMD ["/opt/ol/wlp/bin/server", "run", "defaultServer"]
