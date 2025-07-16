@@ -5,9 +5,11 @@
 This document provides a Claude Code agent-optimized execution plan for migrating WebSphere Cafe from Java 8 + WebSphere Application Server to Java 11 + OpenLiberty. Each step is designed for autonomous execution with clear validation checkpoints.
 
 **Migration Path**: Java 8 + WebSphere AS → Java 11 + OpenLiberty + Container  
-**Total Steps**: 25 discrete execution steps  
-**Validation Points**: 8 checkpoints with rollback procedures  
+**Total Steps**: 32 discrete execution steps (enhanced from 25)  
+**Validation Points**: 12 checkpoints with rollback procedures (enhanced from 8)  
 **Agent Execution Mode**: Autonomous with TodoWrite tracking  
+**Risk Assessment**: Comprehensive pre-migration analysis  
+**Migration Strategy**: Phased approach with parallel environment support  
 
 ---
 
@@ -24,6 +26,103 @@ This document provides a Claude Code agent-optimized execution plan for migratin
 - **Rollback triggers**: Any validation failure stops execution
 - **Backup requirement**: Create backup before starting
 - **Recovery strategy**: Restore from backup and retry with adjustments
+
+---
+
+## RISK ASSESSMENT AND MITIGATION STRATEGIES
+
+### High-Risk Areas Identified
+
+#### 1. JAXB Compatibility Risk
+**Risk**: JAXB removed from JDK 11 causing XML binding failures
+**Impact**: Critical - REST API and entity marshalling broken
+**Mitigation**: 
+- Add explicit JAXB runtime dependencies
+- Validate XML binding in dedicated test suite
+- Implement fallback JSON support if needed
+
+#### 2. Module System Conflicts
+**Risk**: Java 11 module system conflicts with legacy libraries
+**Impact**: High - Application fails to start
+**Mitigation**:
+- Add JVM module system bypass arguments
+- Use `--add-opens` directives for reflection access
+- Test with security manager disabled initially
+
+#### 3. Performance Degradation
+**Risk**: G1GC and container memory management issues
+**Impact**: Medium - Application performance impacts
+**Mitigation**:
+- Baseline performance measurements before migration
+- Implement comprehensive monitoring
+- Tune G1GC parameters for container environment
+
+#### 4. Database Connection Issues
+**Risk**: JNDI datasource configuration incompatibility
+**Impact**: High - Data access layer failure
+**Mitigation**:
+- Validate datasource configuration in Liberty
+- Test connection pooling behavior
+- Implement database health checks
+
+#### 5. Security Configuration Changes
+**Risk**: Jakarta EE security namespace changes break authentication
+**Impact**: High - Application security compromised
+**Mitigation**:
+- Audit all security configurations
+- Test authentication flows thoroughly
+- Implement security scanning
+
+### Risk Mitigation Timeline
+
+1. **Pre-Migration** (Steps 0-5): Environment setup and risk validation
+2. **Core Migration** (Steps 6-20): Systematic component migration
+3. **Validation** (Steps 21-28): Comprehensive testing and validation
+4. **Production Readiness** (Steps 29-32): Final preparations and rollback testing
+
+---
+
+## STEP 0: PRE-MIGRATION RISK ASSESSMENT
+
+### Agent Actions:
+1. Create comprehensive environment analysis
+2. Validate current application health
+3. Establish performance baselines
+4. Identify potential migration blockers
+
+### Agent Commands:
+```bash
+# Create migration analysis directory
+mkdir -p migration-analysis
+
+# Java environment analysis
+java -version > migration-analysis/java-version-before.txt
+java -XshowSettings:vm > migration-analysis/jvm-settings-before.txt
+
+# Application health baseline
+mvn clean package -DskipTests
+java -jar target/websphere-cafe.war --version > migration-analysis/app-version-before.txt
+
+# Performance baseline (if application running)
+curl -o migration-analysis/performance-baseline.json \
+  "http://localhost:9080/websphere-cafe/rest/coffees?benchmark=true"
+
+# Dependency analysis
+mvn dependency:tree > migration-analysis/dependency-tree-before.txt
+mvn dependency:analyze > migration-analysis/dependency-analysis-before.txt
+
+# Security scan
+mvn org.owasp:dependency-check-maven:check
+cp target/dependency-check-report.html migration-analysis/security-scan-before.html
+```
+
+### Agent Validation:
+- [ ] Current Java 8 environment documented
+- [ ] Application builds successfully
+- [ ] Dependency tree analyzed for conflicts
+- [ ] Security vulnerabilities catalogued
+- [ ] Performance baselines established
+- [ ] TodoWrite task marked as completed
 
 ---
 
@@ -52,6 +151,108 @@ javac -version >> java_version_before.txt
 - [ ] Bash tool confirms backup created successfully
 - [ ] Maven build exits with status 0
 - [ ] Java version file created
+- [ ] TodoWrite task marked as completed
+
+---
+
+## STEP 1A: DEPENDENCY COMPATIBILITY ANALYSIS
+
+### Agent Actions:
+1. Analyze all dependencies for Java 11 compatibility
+2. Identify version conflicts and upgrade paths
+3. Create dependency upgrade strategy
+4. Validate license compatibility
+
+### Agent Commands:
+```bash
+# Create dependency analysis report
+mkdir -p migration-analysis/dependencies
+
+# Check for Java 11 compatible versions
+mvn versions:display-dependency-updates > migration-analysis/dependencies/available-updates.txt
+
+# Analyze plugin compatibility
+mvn versions:display-plugin-updates > migration-analysis/dependencies/plugin-updates.txt
+
+# Check for vulnerable dependencies
+mvn org.owasp:dependency-check-maven:check
+cp target/dependency-check-report.html migration-analysis/dependencies/security-report.html
+
+# License analysis
+mvn license:aggregate-download-licenses
+cp target/generated-resources/licenses.xml migration-analysis/dependencies/licenses.xml
+
+# Java 11 compatibility check
+mvn animal-sniffer:check -Dsignature=java18
+```
+
+### Agent Validation:
+- [ ] All dependencies analyzed for Java 11 compatibility
+- [ ] Upgrade path identified for incompatible dependencies
+- [ ] Security vulnerabilities assessed
+- [ ] License compatibility verified
+- [ ] TodoWrite task marked as completed
+
+### Critical Dependencies to Validate:
+1. **JAXB Runtime**: Must add explicit dependencies for Java 11
+2. **EclipseLink**: Verify version 2.7.9+ for Jakarta EE support
+3. **JSF Implementation**: Ensure MyFaces 2.3+ or Mojarra 2.3+
+4. **Bean Validation**: Hibernate Validator 6.0+ for Jakarta EE
+5. **CDI Implementation**: Weld 3.0+ for Jakarta EE support
+
+---
+
+## STEP 1B: ENVIRONMENT COMPATIBILITY MATRIX
+
+### Agent Actions:
+1. Create compatibility matrix for target environment
+2. Validate OpenLiberty version compatibility
+3. Check container base image compatibility
+
+### Agent File Creation:
+```yaml
+# migration-analysis/compatibility-matrix.yml
+java_versions:
+  current: "1.8.0_XXX"
+  target: "11.0.XX"
+  validation: "required"
+
+jakarta_ee:
+  current: "javax.* (Java EE 7)"
+  target: "jakarta.* (Jakarta EE 8)"
+  namespace_changes: "critical"
+
+application_server:
+  current: "WebSphere Application Server 9.0.5"
+  target: "OpenLiberty 23.0.0.6"
+  feature_compatibility: "validated"
+
+dependencies:
+  jaxb:
+    current: "bundled_with_jdk8"
+    target: "explicit_dependency_required"
+    versions: "jakarta.xml.bind:2.3.3"
+  
+  persistence:
+    current: "javax.persistence:2.1"
+    target: "jakarta.persistence:2.2"
+    provider: "EclipseLink 2.7.9+"
+  
+  cdi:
+    current: "javax.enterprise:1.2"
+    target: "jakarta.enterprise:2.0"
+    provider: "Weld 3.0+"
+
+container:
+  base_image: "icr.io/appcafe/open-liberty:full-java11-openj9-ubi"
+  java_distribution: "OpenJ9"
+  optimization: "container_aware"
+```
+
+### Agent Validation:
+- [ ] Compatibility matrix created
+- [ ] All version conflicts identified
+- [ ] Migration path validated
 - [ ] TodoWrite task marked as completed
 
 ---
@@ -717,6 +918,233 @@ public class CafeHealthCheck implements HealthCheck {
 
 ---
 
+## STEP 17A: CREATE PERFORMANCE MONITORING ENDPOINT
+
+### Agent Actions:
+1. Create MicroProfile metrics endpoint for performance monitoring
+2. Add JVM and application-specific metrics
+3. Implement performance benchmarking utilities
+
+### Agent Commands:
+```bash
+mkdir -p websphere-cafe-web/src/main/java/cafe/monitoring
+```
+
+### Agent File Creation:
+```java
+package cafe.monitoring;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
+import org.eclipse.microprofile.metrics.annotation.Gauge;
+import org.eclipse.microprofile.metrics.MetricRegistry;
+import org.eclipse.microprofile.metrics.MetricType;
+import org.eclipse.microprofile.metrics.annotation.Metric;
+
+import cafe.model.CafeRepository;
+
+@ApplicationScoped
+public class CafeMetricsService {
+    
+    @Inject
+    private CafeRepository cafeRepository;
+    
+    @Inject
+    @Metric(name = "cafe.coffee.requests")
+    private org.eclipse.microprofile.metrics.Counter coffeeRequestCounter;
+    
+    @Gauge(name = "cafe.memory.used", unit = "bytes")
+    public long getUsedMemory() {
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
+    
+    @Gauge(name = "cafe.memory.free", unit = "bytes")
+    public long getFreeMemory() {
+        return Runtime.getRuntime().freeMemory();
+    }
+    
+    @Gauge(name = "cafe.memory.max", unit = "bytes")
+    public long getMaxMemory() {
+        return Runtime.getRuntime().maxMemory();
+    }
+    
+    @Gauge(name = "cafe.coffee.total.count")
+    public long getTotalCoffeeCount() {
+        return cafeRepository.getAllCoffees().size();
+    }
+    
+    @Gauge(name = "cafe.jvm.uptime", unit = "milliseconds")
+    public long getJvmUptime() {
+        return java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime();
+    }
+    
+    @Counted(name = "cafe.database.connections")
+    @Timed(name = "cafe.database.connection.time", unit = org.eclipse.microprofile.metrics.MetricUnits.MILLISECONDS)
+    public void recordDatabaseOperation() {
+        // This method will be called by repository operations
+    }
+    
+    public void recordCoffeeRequest() {
+        coffeeRequestCounter.inc();
+    }
+}
+```
+
+### Agent Validation:
+- [ ] Performance metrics endpoint created
+- [ ] JVM metrics configured
+- [ ] Application metrics implemented
+- [ ] TodoWrite task marked as completed
+
+---
+
+## STEP 17B: CREATE PERFORMANCE BENCHMARKING UTILITIES
+
+### Agent Actions:
+1. Create performance benchmarking utilities
+2. Add load testing endpoints
+3. Implement performance comparison tools
+
+### Agent File Creation:
+```java
+package cafe.monitoring;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+
+import cafe.model.CafeRepository;
+import cafe.model.entity.Coffee;
+
+@ApplicationScoped
+@Path("/benchmark")
+public class CafeBenchmarkResource {
+    
+    @Inject
+    private CafeRepository cafeRepository;
+    
+    @Inject
+    private CafeMetricsService metricsService;
+    
+    @GET
+    @Path("/performance")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response runPerformanceBenchmark(@QueryParam("iterations") int iterations) {
+        if (iterations <= 0) iterations = 100;
+        
+        Map<String, Object> results = new HashMap<>();
+        long startTime = System.currentTimeMillis();
+        
+        // Memory before test
+        long memoryBefore = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        
+        // Database operations benchmark
+        long dbStartTime = System.nanoTime();
+        for (int i = 0; i < iterations; i++) {
+            List<Coffee> coffees = cafeRepository.getAllCoffees();
+            metricsService.recordDatabaseOperation();
+        }
+        long dbEndTime = System.nanoTime();
+        
+        // Memory after test
+        long memoryAfter = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        
+        long endTime = System.currentTimeMillis();
+        
+        results.put("test_duration_ms", endTime - startTime);
+        results.put("db_operations_duration_ns", dbEndTime - dbStartTime);
+        results.put("avg_db_operation_ns", (dbEndTime - dbStartTime) / iterations);
+        results.put("memory_used_before_bytes", memoryBefore);
+        results.put("memory_used_after_bytes", memoryAfter);
+        results.put("memory_delta_bytes", memoryAfter - memoryBefore);
+        results.put("iterations", iterations);
+        results.put("java_version", System.getProperty("java.version"));
+        results.put("java_vendor", System.getProperty("java.vendor"));
+        results.put("available_processors", Runtime.getRuntime().availableProcessors());
+        
+        return Response.ok(results).build();
+    }
+    
+    @GET
+    @Path("/load")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response runLoadTest(@QueryParam("threads") int threads, @QueryParam("duration") int durationSeconds) {
+        if (threads <= 0) threads = 10;
+        if (durationSeconds <= 0) durationSeconds = 30;
+        
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<Future<Integer>> futures = new ArrayList<>();
+        
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + (durationSeconds * 1000);
+        
+        // Submit load test tasks
+        for (int i = 0; i < threads; i++) {
+            Future<Integer> future = executor.submit(() -> {
+                int operationCount = 0;
+                while (System.currentTimeMillis() < endTime) {
+                    try {
+                        cafeRepository.getAllCoffees();
+                        operationCount++;
+                        Thread.sleep(10); // Small delay to simulate real usage
+                    } catch (Exception e) {
+                        // Log error but continue
+                    }
+                }
+                return operationCount;
+            });
+            futures.add(future);
+        }
+        
+        // Collect results
+        int totalOperations = 0;
+        for (Future<Integer> future : futures) {
+            try {
+                totalOperations += future.get();
+            } catch (Exception e) {
+                // Handle error
+            }
+        }
+        
+        executor.shutdown();
+        
+        Map<String, Object> results = new HashMap<>();
+        results.put("total_operations", totalOperations);
+        results.put("operations_per_second", totalOperations / durationSeconds);
+        results.put("threads", threads);
+        results.put("duration_seconds", durationSeconds);
+        results.put("java_version", System.getProperty("java.version"));
+        
+        return Response.ok(results).build();
+    }
+}
+```
+
+### Agent Validation:
+- [ ] Benchmarking utilities created
+- [ ] Load testing endpoints functional
+- [ ] Performance comparison tools available
+- [ ] TodoWrite task marked as completed
+
+---
+
 ## STEP 18: CREATE DOCKERFILE
 
 ### Agent Actions:
@@ -1097,6 +1525,253 @@ class CoffeeJaxbTest {
 
 ---
 
+## STEP 22A: SECURITY CONFIGURATION VALIDATION
+
+### Agent Actions:
+1. Create comprehensive security configuration validation
+2. Implement security scanning utilities
+3. Add security health checks
+
+### Agent Commands:
+```bash
+mkdir -p websphere-cafe-web/src/main/java/cafe/security
+```
+
+### Agent File Creation:
+```java
+package cafe.security;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.security.Security;
+
+@ApplicationScoped
+@Path("/security")
+public class SecurityValidationResource {
+    
+    @GET
+    @Path("/scan")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response performSecurityScan() {
+        Map<String, Object> results = new HashMap<>();
+        List<String> issues = new ArrayList<>();
+        List<String> recommendations = new ArrayList<>();
+        
+        // Check Java version for security
+        String javaVersion = System.getProperty("java.version");
+        if (javaVersion.startsWith("1.8")) {
+            issues.add("Java 8 detected - upgrade to Java 11 for security improvements");
+        } else {
+            results.put("java_version_status", "acceptable");
+        }
+        
+        // Check security providers
+        String[] providers = Security.getProviders()[0].getName().split("\\.");
+        results.put("security_providers", providers);
+        
+        // Check system properties for security
+        String[] securityProps = {
+            "java.security.policy",
+            "java.security.manager",
+            "javax.net.ssl.trustStore",
+            "javax.net.ssl.keyStore"
+        };
+        
+        Map<String, String> securitySettings = new HashMap<>();
+        for (String prop : securityProps) {
+            String value = System.getProperty(prop);
+            securitySettings.put(prop, value != null ? value : "not_set");
+        }
+        results.put("security_settings", securitySettings);
+        
+        // Check for development mode indicators
+        String stage = System.getProperty("jakarta.faces.PROJECT_STAGE");
+        if ("Development".equals(stage)) {
+            issues.add("Application running in development mode - ensure production mode for deployment");
+        }
+        
+        // Security recommendations
+        recommendations.add("Enable HTTPS in production");
+        recommendations.add("Configure proper session timeout");
+        recommendations.add("Implement CSRF protection");
+        recommendations.add("Enable security headers");
+        recommendations.add("Configure proper CORS settings");
+        
+        results.put("security_issues", issues);
+        results.put("recommendations", recommendations);
+        results.put("scan_timestamp", System.currentTimeMillis());
+        
+        return Response.ok(results).build();
+    }
+    
+    @GET
+    @Path("/headers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response checkSecurityHeaders() {
+        Map<String, Object> results = new HashMap<>();
+        List<String> recommendedHeaders = new ArrayList<>();
+        
+        // Security headers that should be configured
+        recommendedHeaders.add("X-Content-Type-Options: nosniff");
+        recommendedHeaders.add("X-Frame-Options: DENY");
+        recommendedHeaders.add("X-XSS-Protection: 1; mode=block");
+        recommendedHeaders.add("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+        recommendedHeaders.add("Content-Security-Policy: default-src 'self'");
+        recommendedHeaders.add("Referrer-Policy: strict-origin-when-cross-origin");
+        
+        results.put("recommended_headers", recommendedHeaders);
+        results.put("configuration_location", "server.xml or web.xml");
+        
+        return Response.ok(results).build();
+    }
+}
+```
+
+### Agent Validation:
+- [ ] Security validation endpoint created
+- [ ] Security scanning utilities implemented
+- [ ] Security configuration checked
+- [ ] TodoWrite task marked as completed
+
+---
+
+## STEP 22B: CREATE SECURITY HEALTH CHECK
+
+### Agent Actions:
+1. Create security-focused health check
+2. Add security configuration validation
+
+### Agent File Creation:
+```java
+package cafe.security;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.health.HealthCheck;
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.Liveness;
+
+@ApplicationScoped
+@Liveness
+public class SecurityHealthCheck implements HealthCheck {
+    
+    @Override
+    public HealthCheckResponse call() {
+        boolean isSecure = true;
+        HealthCheckResponse.HealthCheckResponseBuilder builder = HealthCheckResponse.named("security-health-check");
+        
+        // Check Java version
+        String javaVersion = System.getProperty("java.version");
+        builder.withData("java.version", javaVersion);
+        
+        if (javaVersion.startsWith("1.8")) {
+            isSecure = false;
+            builder.withData("java.version.status", "upgrade_required");
+        } else {
+            builder.withData("java.version.status", "acceptable");
+        }
+        
+        // Check for development mode
+        String stage = System.getProperty("jakarta.faces.PROJECT_STAGE");
+        builder.withData("project.stage", stage != null ? stage : "not_set");
+        
+        if ("Development".equals(stage)) {
+            builder.withData("project.stage.warning", "development_mode_detected");
+        }
+        
+        // Check security manager
+        SecurityManager sm = System.getSecurityManager();
+        builder.withData("security.manager.enabled", sm != null);
+        
+        // Check SSL configuration
+        String trustStore = System.getProperty("javax.net.ssl.trustStore");
+        String keyStore = System.getProperty("javax.net.ssl.keyStore");
+        builder.withData("ssl.truststore.configured", trustStore != null);
+        builder.withData("ssl.keystore.configured", keyStore != null);
+        
+        return isSecure ? builder.up().build() : builder.down().build();
+    }
+}
+```
+
+### Agent Validation:
+- [ ] Security health check implemented
+- [ ] Security configuration monitored
+- [ ] TodoWrite task marked as completed
+
+---
+
+## STEP 22C: UPDATE LIBERTY SERVER.XML WITH SECURITY FEATURES
+
+### Agent Actions:
+1. Update Liberty server.xml with security features
+2. Add security-related configuration
+
+### Agent Edits:
+```xml
+<!-- Add to server.xml after existing features -->
+<featureManager>
+    <feature>jakartaee-8.0</feature>
+    <feature>microProfile-4.1</feature>
+    <feature>localConnector-1.0</feature>
+    <feature>transportSecurity-1.0</feature>
+    <feature>appSecurity-3.0</feature>
+    <feature>sessionDatabase-1.0</feature>
+</featureManager>
+
+<!-- Security configuration -->
+<webAppSecurity httpOnlyCookies="true" 
+                secureSessionCookies="true"
+                ssoRequiresSSL="true"
+                useAuthenticationDataForUnprotectedResource="true"/>
+
+<!-- Session configuration -->
+<httpSession invalidationTimeout="30m" 
+             cookieSecure="true" 
+             cookieHttpOnly="true"
+             cookieSameSite="strict"/>
+
+<!-- SSL configuration -->
+<ssl id="defaultSSLConfig" 
+     keyStoreRef="defaultKeyStore" 
+     clientAuthenticationSupported="false"/>
+
+<keyStore id="defaultKeyStore" 
+          password="password" 
+          location="security/key.p12" 
+          type="PKCS12"/>
+
+<!-- Security headers -->
+<webContainer>
+    <security-headers>
+        <header name="X-Content-Type-Options" value="nosniff"/>
+        <header name="X-Frame-Options" value="DENY"/>
+        <header name="X-XSS-Protection" value="1; mode=block"/>
+        <header name="Strict-Transport-Security" value="max-age=31536000; includeSubDomains"/>
+        <header name="Content-Security-Policy" value="default-src 'self'"/>
+        <header name="Referrer-Policy" value="strict-origin-when-cross-origin"/>
+    </security-headers>
+</webContainer>
+```
+
+### Agent Validation:
+- [ ] Security features added to server.xml
+- [ ] Security headers configured
+- [ ] SSL configuration added
+- [ ] Session security configured
+- [ ] TodoWrite task marked as completed
+
+---
+
 ## STEP 23: UPDATE CLAUDE.MD
 
 ### Agent Actions:
@@ -1241,6 +1916,406 @@ mvn liberty:stop
 
 ---
 
+## STEP 24A: ENVIRONMENT-SPECIFIC CONFIGURATION
+
+### Agent Actions:
+1. Create environment-specific configuration files
+2. Add configuration management utilities
+3. Implement environment detection
+
+### Agent Commands:
+```bash
+# Create environment configuration directory
+mkdir -p src/main/liberty/config/environments/{dev,test,staging,prod}
+mkdir -p src/main/resources/environments/{dev,test,staging,prod}
+```
+
+### Agent File Creation - Development Environment:
+```xml
+<!-- src/main/liberty/config/environments/dev/server.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="WebSphere Cafe - Development Environment">
+    <featureManager>
+        <feature>jakartaee-8.0</feature>
+        <feature>microProfile-4.1</feature>
+        <feature>localConnector-1.0</feature>
+        <feature>logstashCollector-1.0</feature>
+    </featureManager>
+    
+    <!-- Development-specific settings -->
+    <httpEndpoint id="defaultHttpEndpoint" httpPort="9080" httpsPort="9443" />
+    
+    <application location="websphere-cafe.war" contextRoot="/websphere-cafe">
+        <classloader commonLibraryRef="jaxbLib"/>
+    </application>
+    
+    <library id="jaxbLib">
+        <fileset dir="${server.config.dir}/lib" includes="jaxb-*.jar"/>
+    </library>
+    
+    <!-- Development database - Derby embedded -->
+    <dataSource id="WebSphereCafeDB" jndiName="jdbc/WebSphereCafeDB">
+        <jdbcDriver libraryRef="derbyLib"/>
+        <properties.derby.embedded databaseName="WebSphereCafeDB_DEV" createDatabase="create"/>
+    </dataSource>
+    
+    <library id="derbyLib">
+        <fileset dir="${server.config.dir}/lib" includes="derby*.jar"/>
+    </library>
+    
+    <!-- Development JVM options -->
+    <jvmOptions>-Xms64m</jvmOptions>
+    <jvmOptions>-Xmx256m</jvmOptions>
+    <jvmOptions>-XX:+UseG1GC</jvmOptions>
+    <jvmOptions>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:7777</jvmOptions>
+    
+    <!-- Development logging -->
+    <logging traceSpecification="*=info:cafe.*=all" 
+             maxFileSize="50" 
+             maxFiles="5" 
+             traceFormat="ENHANCED" 
+             consoleLogLevel="INFO"/>
+    
+    <!-- Development-specific variables -->
+    <variable name="CAFE_ENV" value="development"/>
+    <variable name="CAFE_DEBUG" value="true"/>
+    <variable name="CAFE_LOG_LEVEL" value="debug"/>
+</server>
+```
+
+### Agent File Creation - Production Environment:
+```xml
+<!-- src/main/liberty/config/environments/prod/server.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="WebSphere Cafe - Production Environment">
+    <featureManager>
+        <feature>jakartaee-8.0</feature>
+        <feature>microProfile-4.1</feature>
+        <feature>transportSecurity-1.0</feature>
+        <feature>appSecurity-3.0</feature>
+        <feature>sessionDatabase-1.0</feature>
+        <feature>logstashCollector-1.0</feature>
+    </featureManager>
+    
+    <!-- Production-specific settings -->
+    <httpEndpoint id="defaultHttpEndpoint" 
+                  httpPort="9080" 
+                  httpsPort="9443"
+                  host="*" />
+    
+    <application location="websphere-cafe.war" contextRoot="/websphere-cafe">
+        <classloader commonLibraryRef="jaxbLib"/>
+    </application>
+    
+    <library id="jaxbLib">
+        <fileset dir="${server.config.dir}/lib" includes="jaxb-*.jar"/>
+    </library>
+    
+    <!-- Production database - PostgreSQL -->
+    <dataSource id="WebSphereCafeDB" 
+                jndiName="jdbc/WebSphereCafeDB"
+                connectionManagerRef="conMgr1">
+        <jdbcDriver libraryRef="postgresql-library"/>
+        <properties.postgresql 
+            serverName="${env.DB_HOST}" 
+            portNumber="${env.DB_PORT}" 
+            databaseName="${env.DB_NAME}" 
+            user="${env.DB_USER}" 
+            password="${env.DB_PASSWORD}"/>
+    </dataSource>
+    
+    <connectionManager id="conMgr1" 
+                       maxPoolSize="20" 
+                       minPoolSize="5" 
+                       reapTime="3m" 
+                       maxIdleTime="30m" 
+                       connectionTimeout="30s"/>
+    
+    <library id="postgresql-library">
+        <fileset dir="${server.config.dir}/lib" includes="postgresql*.jar"/>
+    </library>
+    
+    <!-- Production JVM options -->
+    <jvmOptions>-Xms512m</jvmOptions>
+    <jvmOptions>-Xmx2048m</jvmOptions>
+    <jvmOptions>-XX:+UseG1GC</jvmOptions>
+    <jvmOptions>-XX:MaxGCPauseMillis=100</jvmOptions>
+    <jvmOptions>-XX:G1HeapRegionSize=16m</jvmOptions>
+    <jvmOptions>-XX:+UseContainerSupport</jvmOptions>
+    <jvmOptions>-XX:MaxRAMPercentage=75.0</jvmOptions>
+    
+    <!-- Production logging -->
+    <logging traceSpecification="*=info:cafe.*=info" 
+             maxFileSize="100" 
+             maxFiles="10" 
+             traceFormat="BASIC" 
+             consoleLogLevel="WARNING"/>
+    
+    <!-- Security configuration -->
+    <webAppSecurity httpOnlyCookies="true" 
+                    secureSessionCookies="true"
+                    ssoRequiresSSL="true"/>
+    
+    <httpSession invalidationTimeout="30m" 
+                 cookieSecure="true" 
+                 cookieHttpOnly="true"
+                 cookieSameSite="strict"/>
+    
+    <ssl id="defaultSSLConfig" keyStoreRef="defaultKeyStore"/>
+    <keyStore id="defaultKeyStore" 
+              password="${env.SSL_KEYSTORE_PASSWORD}" 
+              location="${env.SSL_KEYSTORE_PATH}" 
+              type="PKCS12"/>
+    
+    <!-- Production-specific variables -->
+    <variable name="CAFE_ENV" value="production"/>
+    <variable name="CAFE_DEBUG" value="false"/>
+    <variable name="CAFE_LOG_LEVEL" value="info"/>
+</server>
+```
+
+### Agent File Creation - Environment Configuration Utility:
+```java
+package cafe.config;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import java.util.Properties;
+import java.io.InputStream;
+import java.util.logging.Logger;
+
+@ApplicationScoped
+public class EnvironmentConfigurationService {
+    
+    private static final Logger logger = Logger.getLogger(EnvironmentConfigurationService.class.getName());
+    
+    private Properties envProperties;
+    private String currentEnvironment;
+    
+    @PostConstruct
+    public void init() {
+        currentEnvironment = determineEnvironment();
+        loadEnvironmentProperties();
+        logger.info("Initialized configuration for environment: " + currentEnvironment);
+    }
+    
+    private String determineEnvironment() {
+        // Check system property first
+        String env = System.getProperty("CAFE_ENV");
+        if (env != null) {
+            return env;
+        }
+        
+        // Check environment variable
+        env = System.getenv("CAFE_ENV");
+        if (env != null) {
+            return env;
+        }
+        
+        // Check Liberty server name
+        String serverName = System.getProperty("wlp.server.name");
+        if (serverName != null) {
+            if (serverName.contains("prod")) return "production";
+            if (serverName.contains("stage")) return "staging";
+            if (serverName.contains("test")) return "test";
+        }
+        
+        // Default to development
+        return "development";
+    }
+    
+    private void loadEnvironmentProperties() {
+        envProperties = new Properties();
+        String propertiesFile = "/environments/" + currentEnvironment + "/application.properties";
+        
+        try (InputStream is = getClass().getResourceAsStream(propertiesFile)) {
+            if (is != null) {
+                envProperties.load(is);
+                logger.info("Loaded environment properties from: " + propertiesFile);
+            } else {
+                logger.warning("Environment properties file not found: " + propertiesFile);
+            }
+        } catch (Exception e) {
+            logger.severe("Error loading environment properties: " + e.getMessage());
+        }
+    }
+    
+    public String getCurrentEnvironment() {
+        return currentEnvironment;
+    }
+    
+    public String getProperty(String key) {
+        return envProperties.getProperty(key);
+    }
+    
+    public String getProperty(String key, String defaultValue) {
+        return envProperties.getProperty(key, defaultValue);
+    }
+    
+    public boolean isProduction() {
+        return "production".equals(currentEnvironment);
+    }
+    
+    public boolean isDevelopment() {
+        return "development".equals(currentEnvironment);
+    }
+    
+    public boolean isTest() {
+        return "test".equals(currentEnvironment);
+    }
+}
+```
+
+### Agent Validation:
+- [ ] Environment-specific configurations created
+- [ ] Configuration management utility implemented
+- [ ] Environment detection working
+- [ ] TodoWrite task marked as completed
+
+---
+
+## STEP 24B: ENVIRONMENT-SPECIFIC DOCKER CONFIGURATIONS
+
+### Agent Actions:
+1. Create environment-specific Docker configurations
+2. Add Docker Compose configurations for different environments
+
+### Agent File Creation - Development Docker Compose:
+```yaml
+# docker-compose.dev.yml
+version: '3.8'
+services:
+  websphere-cafe-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "9080:9080"
+      - "9443:9443"
+      - "7777:7777"  # Debug port
+    environment:
+      - CAFE_ENV=development
+      - CAFE_DEBUG=true
+      - CAFE_LOG_LEVEL=debug
+      - WLP_LOGGING_CONSOLE_LOGLEVEL=INFO
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:7777
+    volumes:
+      - ./logs:/logs
+      - ./src/main/liberty/config/environments/dev:/config
+    depends_on:
+      - derby-dev
+    networks:
+      - cafe-dev-network
+
+  derby-dev:
+    image: timveil/derby-db:latest
+    ports:
+      - "1527:1527"
+    environment:
+      - DERBY_DATABASE=WebSphereCafeDB_DEV
+    volumes:
+      - derby_dev_data:/var/lib/derby/data
+    networks:
+      - cafe-dev-network
+
+volumes:
+  derby_dev_data:
+
+networks:
+  cafe-dev-network:
+```
+
+### Agent File Creation - Production Docker Compose:
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+services:
+  websphere-cafe-prod:
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "9080:9080"
+      - "9443:9443"
+    environment:
+      - CAFE_ENV=production
+      - CAFE_DEBUG=false
+      - CAFE_LOG_LEVEL=info
+      - DB_HOST=postgres-prod
+      - DB_PORT=5432
+      - DB_NAME=WebSphereCafeDB
+      - DB_USER=cafe_user
+      - DB_PASSWORD_FILE=/run/secrets/db_password
+      - SSL_KEYSTORE_PATH=/run/secrets/ssl_keystore
+      - SSL_KEYSTORE_PASSWORD_FILE=/run/secrets/ssl_keystore_password
+      - JAVA_TOOL_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    volumes:
+      - ./logs:/logs
+      - ./src/main/liberty/config/environments/prod:/config
+    depends_on:
+      - postgres-prod
+    secrets:
+      - db_password
+      - ssl_keystore
+      - ssl_keystore_password
+    networks:
+      - cafe-prod-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:9443/websphere-cafe/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  postgres-prod:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=WebSphereCafeDB
+      - POSTGRES_USER=cafe_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    secrets:
+      - db_password
+    networks:
+      - cafe-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cafe_user -d WebSphereCafeDB"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  ssl_keystore:
+    file: ./secrets/keystore.p12
+  ssl_keystore_password:
+    file: ./secrets/keystore_password.txt
+
+volumes:
+  postgres_prod_data:
+
+networks:
+  cafe-prod-network:
+```
+
+### Agent Validation:
+- [ ] Environment-specific Docker configurations created
+- [ ] Production security configurations implemented
+- [ ] Development debugging configurations added
+- [ ] TodoWrite task marked as completed
+
+---
+
 ## STEP 25: CONTAINERIZATION VALIDATION
 
 ### Agent Actions:
@@ -1346,3 +2421,281 @@ docker rm websphere-cafe-test
 - **Documentation**: CLAUDE.md updated with new architecture
 
 This agent-optimized execution plan ensures systematic, trackable, and recoverable migration from Java 8 + WebSphere to Java 11 + OpenLiberty with full containerization support.
+
+---
+
+## GRADUAL MIGRATION STRATEGY (ALTERNATIVE APPROACH)
+
+### Phase 1: Parallel Environment Setup (1-2 weeks)
+**Goal**: Establish Java 11 + OpenLiberty environment alongside existing WebSphere
+
+#### Phase 1 Steps:
+1. **Environment Setup**
+   - Create separate development environment with Java 11 + OpenLiberty
+   - Configure CI/CD pipeline for parallel builds
+   - Set up monitoring and logging for both environments
+
+2. **Basic Application Migration**
+   - Migrate simple, stateless components first
+   - Update namespace imports (javax → jakarta)
+   - Basic functionality testing
+
+3. **Validation**
+   - Compare performance metrics between environments
+   - Validate core functionality parity
+   - Test data access layer compatibility
+
+### Phase 2: Feature-by-Feature Migration (2-4 weeks)
+**Goal**: Migrate application features incrementally with rollback capability
+
+#### Phase 2 Steps:
+1. **REST API Migration**
+   - Migrate CafeResource to Jakarta EE namespace
+   - Test XML marshalling/unmarshalling
+   - Validate REST endpoints functionality
+
+2. **Web Layer Migration**
+   - Migrate JSF components
+   - Update faces-config.xml and web.xml
+   - Test user interface functionality
+
+3. **Data Layer Migration**
+   - Migrate JPA entities and repositories
+   - Update persistence.xml configuration
+   - Test database connectivity and operations
+
+4. **Monitoring and Health Checks**
+   - Add health check endpoints
+   - Implement performance monitoring
+   - Configure logging and metrics
+
+### Phase 3: Production Cutover (1 week)
+**Goal**: Complete migration with minimal downtime
+
+#### Phase 3 Steps:
+1. **Pre-Cutover Validation**
+   - Full regression testing
+   - Performance benchmarking
+   - Security validation
+   - Load testing
+
+2. **Cutover Execution**
+   - Blue-green deployment strategy
+   - Database migration if needed
+   - DNS/Load balancer updates
+   - Monitoring during cutover
+
+3. **Post-Cutover Validation**
+   - Application functionality verification
+   - Performance monitoring
+   - Error rate analysis
+   - User acceptance testing
+
+### Rollback Strategy for Gradual Migration:
+- **Immediate Rollback**: DNS/Load balancer switch back to WebSphere
+- **Database Rollback**: Database snapshot restoration if schema changes
+- **Application Rollback**: Previous version deployment capability
+- **Monitoring**: Automated alerts for performance degradation or errors
+
+---
+
+## ENHANCED BACKUP AND RECOVERY PROCEDURES
+
+### Comprehensive Backup Strategy
+
+#### Pre-Migration Backup Checklist:
+1. **Full System Backup**
+   ```bash
+   # Create timestamped backup directory
+   BACKUP_DIR="/backup/websphere-cafe-migration-$(date +%Y%m%d_%H%M%S)"
+   mkdir -p "$BACKUP_DIR"
+   
+   # Backup entire codebase
+   tar -czf "$BACKUP_DIR/websphere-cafe-codebase.tar.gz" /mnt/d/websphere-cafe
+   
+   # Backup Java environment
+   java -version > "$BACKUP_DIR/java-version.txt"
+   echo $JAVA_HOME > "$BACKUP_DIR/java-home.txt"
+   
+   # Backup Maven settings
+   cp ~/.m2/settings.xml "$BACKUP_DIR/maven-settings.xml"
+   
+   # Backup system environment variables
+   printenv | grep -E "JAVA|MAVEN|PATH" > "$BACKUP_DIR/environment-variables.txt"
+   ```
+
+2. **Database Backup**
+   ```bash
+   # Derby database backup
+   cp -r $DERBY_HOME/databases "$BACKUP_DIR/derby-databases"
+   
+   # PostgreSQL backup (if using PostgreSQL)
+   pg_dump -U cafe_user WebSphereCafeDB > "$BACKUP_DIR/postgres-backup.sql"
+   ```
+
+3. **Configuration Backup**
+   ```bash
+   # WebSphere configuration backup
+   cp -r $WAS_HOME/profiles/default/config "$BACKUP_DIR/websphere-config"
+   
+   # Application server logs
+   cp -r $WAS_HOME/profiles/default/logs "$BACKUP_DIR/websphere-logs"
+   ```
+
+4. **Application State Backup**
+   ```bash
+   # Current build artifacts
+   cp -r target "$BACKUP_DIR/build-artifacts"
+   
+   # Generated documentation
+   cp -r docs "$BACKUP_DIR/documentation"
+   
+   # Test results
+   cp -r target/surefire-reports "$BACKUP_DIR/test-results"
+   ```
+
+#### Recovery Procedures:
+
+1. **Complete System Recovery**
+   ```bash
+   # Stop current application
+   mvn liberty:stop
+   
+   # Restore codebase
+   cd /mnt/d
+   rm -rf websphere-cafe
+   tar -xzf "$BACKUP_DIR/websphere-cafe-codebase.tar.gz"
+   
+   # Restore Java environment
+   export JAVA_HOME=$(cat "$BACKUP_DIR/java-home.txt")
+   export PATH=$JAVA_HOME/bin:$PATH
+   
+   # Restore Maven settings
+   cp "$BACKUP_DIR/maven-settings.xml" ~/.m2/settings.xml
+   
+   # Verify restoration
+   java -version
+   mvn -version
+   ```
+
+2. **Database Recovery**
+   ```bash
+   # Derby database recovery
+   rm -rf $DERBY_HOME/databases
+   cp -r "$BACKUP_DIR/derby-databases" $DERBY_HOME/databases
+   
+   # PostgreSQL recovery
+   dropdb -U cafe_user WebSphereCafeDB
+   createdb -U cafe_user WebSphereCafeDB
+   psql -U cafe_user WebSphereCafeDB < "$BACKUP_DIR/postgres-backup.sql"
+   ```
+
+3. **Application Recovery**
+   ```bash
+   # Clean build
+   mvn clean
+   
+   # Restore build artifacts
+   cp -r "$BACKUP_DIR/build-artifacts" target
+   
+   # Restart application
+   mvn liberty:start
+   
+   # Verify application
+   curl -f http://localhost:9080/websphere-cafe/health
+   ```
+
+### Automated Recovery Script:
+```bash
+#!/bin/bash
+# automated-recovery.sh
+
+set -e
+
+BACKUP_DIR="$1"
+if [ -z "$BACKUP_DIR" ]; then
+    echo "Usage: $0 <backup-directory>"
+    exit 1
+fi
+
+echo "Starting automated recovery from: $BACKUP_DIR"
+
+# Stop running services
+echo "Stopping Liberty server..."
+mvn liberty:stop || true
+
+# Restore codebase
+echo "Restoring codebase..."
+cd /mnt/d
+rm -rf websphere-cafe
+tar -xzf "$BACKUP_DIR/websphere-cafe-codebase.tar.gz"
+
+# Restore environment
+echo "Restoring environment..."
+export JAVA_HOME=$(cat "$BACKUP_DIR/java-home.txt")
+export PATH=$JAVA_HOME/bin:$PATH
+
+# Restore Maven settings
+cp "$BACKUP_DIR/maven-settings.xml" ~/.m2/settings.xml
+
+# Restore database
+echo "Restoring database..."
+rm -rf $DERBY_HOME/databases
+cp -r "$BACKUP_DIR/derby-databases" $DERBY_HOME/databases
+
+# Verify restoration
+echo "Verifying restoration..."
+cd websphere-cafe
+mvn clean compile
+
+# Start application
+echo "Starting application..."
+mvn liberty:start
+
+# Wait for startup
+sleep 30
+
+# Verify application
+echo "Verifying application..."
+if curl -f http://localhost:9080/websphere-cafe/health; then
+    echo "✓ Recovery successful - Application is running"
+else
+    echo "✗ Recovery failed - Application not responding"
+    exit 1
+fi
+
+echo "Recovery completed successfully"
+```
+
+### Recovery Validation Checklist:
+- [ ] Java version matches pre-migration version
+- [ ] Maven settings restored correctly
+- [ ] Database contains expected data
+- [ ] Application builds successfully
+- [ ] All tests pass
+- [ ] Application starts without errors
+- [ ] Health endpoints respond correctly
+- [ ] REST API functions properly
+- [ ] Web interface accessible
+- [ ] Performance metrics within acceptable range
+
+### Emergency Contact Information:
+```yaml
+# emergency-contacts.yml
+migration_team:
+  lead: "John Doe <john.doe@company.com>"
+  java_expert: "Jane Smith <jane.smith@company.com>"
+  database_admin: "Bob Johnson <bob.johnson@company.com>"
+  
+escalation:
+  level_1: "Team Lead"
+  level_2: "Technical Manager"
+  level_3: "CTO"
+  
+support_resources:
+  confluence: "https://company.atlassian.net/wiki/spaces/MIGRATION"
+  slack: "#websphere-migration"
+  jira: "https://company.atlassian.net/projects/WM"
+```
+
+This comprehensive migration plan provides both systematic execution and robust recovery capabilities, ensuring minimal risk and maximum success probability for the Java 11 + OpenLiberty migration.
