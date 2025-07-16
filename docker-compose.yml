@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  websphere-cafe:
+    build: .
+    ports:
+      - "9080:9080"
+      - "9443:9443"
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/websphere-cafe/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
