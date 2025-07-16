@@ -18,6 +18,65 @@
         It is a simple CRUD application. It uses Maven and Java EE 7 (JAX-RS, EJB, CDI, JPA, JSF, Bean Validation).
     </description>
 
+	<dependencies>
+		<!-- Individual Jakarta EE APIs -->
+		<dependency>
+			<groupId>jakarta.ejb</groupId>
+			<artifactId>jakarta.ejb-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.ws.rs</groupId>
+			<artifactId>jakarta.ws.rs-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.persistence</groupId>
+			<artifactId>jakarta.persistence-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.inject</groupId>
+			<artifactId>jakarta.inject-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.faces</groupId>
+			<artifactId>jakarta.faces-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.cdi-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- JAXB for Java 11+ compatibility -->
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<finalName>websphere-cafe</finalName>
 		<plugins>
