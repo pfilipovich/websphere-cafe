@@ -76,10 +76,10 @@ public class Cafe implements Serializable {
         // Get values of coffee name & price from session
         name = (String) request.getSession().getAttribute("coffeeName");
         Double priceInSession = (Double) request.getSession().getAttribute("coffeePrice");
-        price = priceInSession != null ? priceInSession.doubleValue() : 0;
+        price = priceInSession != null ? priceInSession : 0.0;
 
         baseUri = "http://localhost:9080" + request.getContextPath() + "/rest/coffees";
-        this.client = ClientBuilder.newBuilder().build();
+        this.client = ClientBuilder.newClient();
 	}
 
 	private void getAllCoffees() {
@@ -96,7 +96,7 @@ public class Cafe implements Serializable {
 
         // Set values of new coffee name and price into session
         request.getSession().setAttribute("coffeeName", this.name);
-		request.getSession().setAttribute("coffeePrice", Double.valueOf(this.price));
+		request.getSession().setAttribute("coffeePrice", this.price);
 
         FacesContext.getCurrentInstance().getExternalContext().redirect("");
 	}
