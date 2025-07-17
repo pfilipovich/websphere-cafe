@@ -8,7 +8,7 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 COPY --chown=1001:0 src/main/liberty/config/ /config/
 
 # Copy application
-COPY --chown=1001:0 target/websphere-cafe.war /config/apps/
+COPY --chown=1001:0 websphere-cafe-web/target/websphere-cafe.war /config/apps/
 
 # Java 11 optimized JVM options
 ENV JVM_ARGS="-Xms128m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"

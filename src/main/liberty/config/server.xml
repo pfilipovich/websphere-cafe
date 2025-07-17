@@ -3,6 +3,10 @@
     <featureManager>
         <feature>webProfile-8.0</feature>
         <feature>microProfile-4.1</feature>
+        <feature>jsf-2.3</feature>
+        <feature>jaxrs-2.1</feature>
+        <feature>jpa-2.2</feature>
+        <feature>cdi-2.0</feature>
     </featureManager>
     
     <httpEndpoint id="defaultHttpEndpoint" httpPort="9080" httpsPort="9443" />
@@ -12,7 +16,9 @@
     <dataSource id="WebSphereCafeDB" jndiName="jdbc/WebSphereCafeDB">
         <jdbcDriver>
             <library>
-                <fileset dir="${wlp.install.dir}/dev" includes="derby*.jar"/>
+                <fileset dir="${wlp.install.dir}" includes="derby*.jar"/>
+                <fileset dir="${server.config.dir}/lib" includes="derby*.jar"/>
+                <fileset dir="/opt/ol/wlp/dev" includes="derby*.jar"/>
             </library>
         </jdbcDriver>
         <properties.derby.embedded databaseName="memory:WebSphereCafeDB" createDatabase="create"/>
