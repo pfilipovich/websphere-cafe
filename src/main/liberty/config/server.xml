@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <server description="WebSphere Cafe OpenLiberty Server - Java 11">
     <featureManager>
-        <feature>jakartaee-9.1</feature>
-        <feature>microProfile-5.0</feature>
+        <feature>jakartaee-8.0</feature>
+        <feature>microProfile-4.1</feature>
     </featureManager>
     
     <httpEndpoint id="defaultHttpEndpoint" httpPort="9080" httpsPort="9443" />
