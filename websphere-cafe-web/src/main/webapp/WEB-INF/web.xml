@@ -17,14 +17,6 @@
         <url-pattern>*.xhtml</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>jakarta.ws.rs.core.Application</servlet-name>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>jakarta.ws.rs.core.Application</servlet-name>
-        <url-pattern>/rest/*</url-pattern>
-    </servlet-mapping>
-
     <session-config>
         <session-timeout>
             60
