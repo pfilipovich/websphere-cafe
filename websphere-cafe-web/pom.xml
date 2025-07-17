@@ -99,15 +99,19 @@
 			<plugin>
 				<groupId>io.openliberty.tools</groupId>
 				<artifactId>liberty-maven-plugin</artifactId>
-				<version>3.8.2</version>
+				<version>3.10.3</version>
 				<configuration>
 					<serverName>websphere-cafe</serverName>
 					<assemblyArtifact>
 						<groupId>io.openliberty</groupId>
 						<artifactId>openliberty-runtime</artifactId>
-						<version>23.0.0.6</version>
+						<version>24.0.0.3</version>
 						<type>zip</type>
 					</assemblyArtifact>
+					<javaHome>/usr/lib/jvm/java-11-openjdk-amd64</javaHome>
+					<appsDirectory>apps</appsDirectory>
+					<stripVersion>true</stripVersion>
+					<installAppPackages>project</installAppPackages>
 				</configuration>
 			</plugin>
 		</plugins>
