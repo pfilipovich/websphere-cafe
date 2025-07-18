@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <server description="WebSphere Cafe OpenLiberty Server - Java 11">
     <featureManager>
-        <feature>jakartaee-8.0</feature>
-        <feature>microProfile-4.1</feature>
+        <feature>jakartaee-9.1</feature>
+        <feature>microProfile-5.0</feature>
     </featureManager>
     
     <httpEndpoint id="defaultHttpEndpoint" httpPort="9080" httpsPort="9443" />
     
     <application location="websphere-cafe.war" contextRoot="/websphere-cafe" />
+    
+    <!-- Basic user registry for ORB -->
+    <basicRegistry id="basic" realm="BasicRealm">
+        <user name="admin" password="admin" />
+    </basicRegistry>
     
     <dataSource id="WebSphereCafeDB" jndiName="jdbc/WebSphereCafeDB">
         <jdbcDriver>
